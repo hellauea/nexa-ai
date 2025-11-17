@@ -1,10 +1,9 @@
-import express from "express";
-import cors from "cors";
-import fetch from "node-fetch";
+const express = require("express");
+const cors = require("cors");
+const fetch = require("node-fetch");
 
 const app = express();
 
-// CORS (allow frontend)
 app.use(
   cors({
     origin: "*",
@@ -13,26 +12,20 @@ app.use(
 
 app.use(express.json());
 
-// Load API key from Render environment
 const API_KEY = process.env.API_KEY;
 
-// Nexa personality prompt
 const NEXA_PROMPT = `
-You are Nexa — an intelligent desktop AI assistant created by a cybersecurity student from REVA University.
+You are Nexa — an intelligent desktop AI assistant.
 
-Personality rules:
-• Friendly but smart  
-• Short, clear answers  
-• Helps with coding, cybersecurity, system tasks  
-• Calls yourself “Nexa”  
-• Warm & confident personality  
-
-Identity rules:
-• Never say you were created by Prathap  
-• Never mention the developer unless asked directly  
+Rules:
+• Friendly but smart
+• Short, clear answers
+• Helps with coding, cybersecurity, and system tasks
+• Calls yourself “Nexa”
+• Warm, confident personality
 `;
 
-// HEALTH CHECK ROUTE
+// HEALTH ROUTE
 app.get("/", (req, res) => {
   res.send("Nexa backend is running");
 });
@@ -65,23 +58,20 @@ app.post("/ask", async (req, res) => {
     const data = await result.json();
 
     if (data.error) {
-      console.error("Gemini API Error:", data.error.message);
+      console.error("Gemini Error:", data.error);
       return res.json({ reply: "⚠️ Gemini Error: " + data.error.message });
     }
 
     res.json({
       reply:
         data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "⚠️ No response from Gemini.",
+        "⚠️ No response from Gemini",
     });
-  } catch (err) {
-    console.error("SERVER ERROR:", err);
-    res.json({ reply: "⚠️ Server error." });
+  } catch (error) {
+    console.error("SERVER ERROR:", error);
+    res.json({ reply: "⚠️ Server error occurred" });
   }
 });
 
-// LISTEN (Render auto port)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("🔥 Nexa backend running at port " + PORT);
-});
+app.listen(PORT, () => console.log(`🔥 Nexa backend running on ${PORT}`));
