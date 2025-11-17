@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 
 const app = express();
 
-// CORS fix
+// CORS (allow frontend)
 app.use(
   cors({
     origin: "*",
@@ -13,10 +13,10 @@ app.use(
 
 app.use(express.json());
 
-// Environment API key
+// Load API key from Render environment
 const API_KEY = process.env.API_KEY;
 
-// Nexa personality
+// Nexa personality prompt
 const NEXA_PROMPT = `
 You are Nexa — an intelligent desktop AI assistant created by a cybersecurity student from REVA University.
 
@@ -32,7 +32,7 @@ Identity rules:
 • Never mention the developer unless asked directly  
 `;
 
-// HEALTH ROUTE
+// HEALTH CHECK ROUTE
 app.get("/", (req, res) => {
   res.send("Nexa backend is running");
 });
@@ -80,7 +80,8 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// LISTEN
-app.listen(3000, () =>
-  console.log("🔥 Nexa backend running at port 3000")
-);
+// LISTEN (Render auto port)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🔥 Nexa backend running at port " + PORT);
+});
