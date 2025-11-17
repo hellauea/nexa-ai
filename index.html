@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa AI Assistant</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'nexa-dark': '#0a0a0f', // Darker space black
+                        'nexa-gray': '#121218', // Slightly lighter gray
+                        'nexa-light-gray': '#1E1E28', // Lighter gray for bubbles
+                        'nexa-accent': '#00BFFF', // Deep sky blue (more vibrant)
+                        'nexa-accent-glow': 'rgba(0, 191, 255, 0.3)',
+                        'nexa-text': '#E0E0E0',
+                        'nexa-text-dim': '#A0A0A0',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Use Inter font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+.code-container {
+    background: #0d0d12;
+    border: 1px solid rgba(0,191,255,0.2);
+    border-radius: 10px;
+    padding-top: 10px;
+    margin: 12px 0;
+}
+
+.code-container pre {
+    margin: 0 !important;
+    padding: 14px !important;
+    overflow-x: auto;
+}
+
+.copy-btn {
+    cursor: pointer;
+}
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Futuristic radial gradient background */
+            background-color: #0a0a0f;
+            background-image: radial-gradient(circle at 10% 10%, rgba(0, 191, 255, 0.1) 0%, transparent 30%),
+                              radial-gradient(circle at 90% 80%, rgba(0, 191, 255, 0.1) 0%, transparent 30%);
+            overflow: hidden;
+        }
+        /* Custom scrollbar */
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: #121218;
+            border-radius: 10px;
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: #1E1E28;
+            border-radius: 10px;
+        }
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background-color: #2D2D3D;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        /* Glow effect for the main container */
+        .glow-container {
+            box-shadow: 0 0 15px 5px rgba(0, 191, 255, 0.1), 0 0 2px 1px rgba(0, 191, 255, 0.15);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+        }
+        /* Glow effect for input */
+        .glow-input:focus-within {
+            box-shadow: 0 0 10px 2px rgba(0, 191, 255, 0.2);
+            border-color: rgba(0, 191, 255, 0.5);
+        }
+        /* Markdown code blocks */
+        .chat-bubble code {
+            background-color: #0a0a0f;
+            color: #00BFFF;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .chat-bubble pre {
+            background-color: #0a0a0f;
+            color: #E0E0E0;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .chat-bubble pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .chat-bubble ul, .chat-bubble ol {
+            padding-left: 20px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .chat-bubble ul li {
+            list-style-type: disc;
+        }
+        .chat-bubble ol li {
+            list-style-type: decimal;
+        }
+    </style>
+<!-- Prism JS for Syntax Highlighting -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+</head>
+<body class="h-full bg-nexa-dark text-nexa-text flex items-center justify-center p-4">
+
+    <div class="glow-container bg-nexa-gray rounded-2xl shadow-2xl w-full max-w-lg h-[700px] max-h-[90vh] flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <header class="p-5 border-b border-nexa-light-gray flex items-center justify-between space-x-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-r from-nexa-accent to-blue-400 rounded-lg shadow-lg">
+                    <!-- Simple SVG logo -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold text-white">Nexa AI Assistant</h1>
+            </div>
+            <!-- Clear Chat Button -->
+            <button id="clear-chat-btn" class="text-nexa-text-dim hover:text-nexa-accent transition-colors" title="Clear Chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="flex-1 p-6 space-y-5 overflow-y-auto">
+            <!-- Initial bot message -->
+            <div class="flex justify-start group">
+                <div class="chat-bubble bg-nexa-light-gray p-4 rounded-xl rounded-bl-none relative">
+                    <p class="text-nexa-text" data-raw-text="Hello! How can I help you today?">Hello! How can I help you today?</p>
+                </div>
+            </div>
+            <!-- Chat messages will be appended here -->
+        </div>
+
+        <!-- Message Input -->
+        <footer class="p-5 border-t border-nexa-light-gray">
+            <form id="chat-form" class="flex items-center space-x-3 glow-input bg-nexa-light-gray border border-gray-700 rounded-lg transition-all duration-300">
+                <input 
+                    type="text" 
+                    id="message-input"
+                    placeholder="Talk to Nexa..." 
+                    autocomplete="off"
+                    class="flex-1 bg-transparent px-4 py-3 text-nexa-text placeholder-nexa-text-dim focus:outline-none"
+                >
+                <button 
+                    type="submit"
+                    class="bg-nexa-accent text-white rounded-lg p-3 m-1 hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    aria-label="Send message"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const clearChatBtn = document.getElementById('clear-chat-btn');
+        const serverUrl = 'http://localhost:3000/ask';
+
+        chatForm.addEventListener('submit', handleFormSubmit);
+        clearChatBtn.addEventListener('click', clearChat);
+
+        // --- Helper Functions ---
+
+        /**
+         * Escapes HTML special characters to prevent XSS.
+         */
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(match) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[match];
+            });
+        }
+
+        /**
+         * Parses a simple version of Markdown.
+         * Handles: **bold**, *italic*, `code`, \n, and lists.
+         */
+       function parseSimpleMarkdown(text) {
+    // Escape HTML
+    let escaped = escapeHTML(text);
+
+    // Fenced code block handling
+    escaped = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const language = lang || "plaintext";
+        return `
+            <div class="code-container relative group">
+                <button class="copy-btn absolute top-2 right-2 bg-nexa-dark text-nexa-text-dim px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition">
+                    Copy
+                </button>
+                <pre class="rounded-lg"><code class="language-${language}">${escapeHTML(code)}</code></pre>
+            </div>
+        `;
+    });
+
+    // Inline code
+    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Bold
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Italic
+    escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // New lines
+    escaped = escaped.replace(/\n/g, "<br>");
+
+    return escaped;
+}
+
+
+
+        /**
+         * Copies text to the clipboard using a reliable fallback.
+         */
+        function copyToClipboard(text, button) {
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = text;
+            tempTextarea.style.position = 'absolute';
+            tempTextarea.style.left = '-9999px';
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            tempTextarea.setSelectionRange(0, 99999); // For mobile
+            try {
+                document.execCommand('copy');
+                // Visual feedback
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                `;
+                setTimeout(() => {
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    `;
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+                // You could show an error message to the user here
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        // --- Core Functions ---
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            appendMessage(message, 'user');
+            messageInput.value = '';
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                const response = await fetch(serverUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                removeTypingIndicator(typingIndicator);
+                appendMessage(data.reply || 'Sorry, I had trouble getting a response.', 'bot');
+
+            } catch (error) {
+                console.error('Error fetching from server:', error);
+                removeTypingIndicator(typingIndicator);
+                appendMessage(`⚠️ Error: Could not connect to the AI. Please ensure the server is running. (${error.message})`, 'bot-error');
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('flex', 'group'); // Add group for copy-hover
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('chat-bubble', 'p-4', 'rounded-xl', 'relative');
+            
+            // Use innerHTML for markdown, but store raw text for copying
+            messageBubble.innerHTML = parseSimpleMarkdown(text);
+            messageBubble.setAttribute('data-raw-text', text); // Store raw text
+
+            if (sender === 'user') {
+                messageWrapper.classList.add('justify-end');
+                messageBubble.classList.add('bg-nexa-accent', 'text-white', 'rounded-br-none');
+            } else {
+                messageWrapper.classList.add('justify-start');
+                messageBubble.classList.add('bg-nexa-light-gray', 'rounded-bl-none');
+                
+                if (sender === 'bot-error') {
+                    messageBubble.classList.add('text-red-400');
+                } else {
+                    messageBubble.classList.add('text-nexa-text');
+                    // Add copy button only for successful bot messages
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'absolute -top-2 -right-2 p-1 bg-nexa-dark rounded-full text-nexa-text-dim opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100';
+                    copyBtn.title = 'Copy text';
+                    copyBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    `;
+                    copyBtn.onclick = (e) => {
+                        e.stopPropagation(); // Don't trigger other events
+                        copyToClipboard(text, copyBtn);
+                    };
+                    messageBubble.appendChild(copyBtn);
+                }
+            }
+
+            messageWrapper.appendChild(messageBubble);
+            chatMessages.appendChild(messageWrapper);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const typingWrapper = document.createElement('div');
+            typingWrapper.id = 'typing-indicator';
+            typingWrapper.classList.add('flex', 'justify-start');
+            
+            const typingBubble = document.createElement('div');
+            typingBubble.classList.add('chat-bubble', 'bg-nexa-light-gray', 'p-4', 'rounded-xl', 'rounded-bl-none', 'text-nexa-text-dim');
+            typingBubble.innerHTML = `
+                <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.3s;"></div>
+                </div>
+            `;
+            
+            typingWrapper.appendChild(typingBubble);
+            chatMessages.appendChild(typingWrapper);
+            scrollToBottom();
+            return typingWrapper;
+        }
+
+        function removeTypingIndicator(indicator) {
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function clearChat() {
+            chatMessages.innerHTML = '';
+            // Add the initial bot message back
+            appendMessage('Hello! How can I help you today?', 'bot');
+        }
+document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("copy-btn")) {
+        const codeBlock = e.target.parentElement.querySelector("code").innerText;
+
+        navigator.clipboard.writeText(codeBlock)
+            .then(() => {
+                e.target.innerText = "Copied!";
+                setTimeout(() => e.target.innerText = "Copy", 1500);
+            })
+            .catch(err => console.error("Copy failed:", err));
+    }
+});
+   
+ </script>
+</body>
+</html>
