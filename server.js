@@ -58,9 +58,16 @@ app.post("/ask", async (req, res) => {
 });
 
 // ✅ HEALTH CHECK (required for Render)
+// Health check route
 app.get("/", (req, res) => {
   res.send("Nexa backend is running");
 });
+
+// Start server
+app.listen(port, () => {
+  console.log(`🔥 Nexa backend running at http://localhost:${port}`);
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
