@@ -3,416 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexa AI Assistant</title>
-    <!-- Load Tailwind CSS -->
+    <title>NEXA | AI Companion</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Prism JS (Syntax Highlighting) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        'nexa-dark': '#0a0a0f', // Darker space black
-                        'nexa-gray': '#121218', // Slightly lighter gray
-                        'nexa-light-gray': '#1E1E28', // Lighter gray for bubbles
-                        'nexa-accent': '#00BFFF', // Deep sky blue (more vibrant)
-                        'nexa-accent-glow': 'rgba(0, 191, 255, 0.3)',
-                        'nexa-text': '#E0E0E0',
-                        'nexa-text-dim': '#A0A0A0',
+                        nexa: {
+                            bg: '#050507',
+                            glass: 'rgba(20, 20, 35, 0.7)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            accent: '#3b82f6', // Blue-500
+                            accentGlow: 'rgba(59, 130, 246, 0.5)',
+                            userBubble: '#2563eb',
+                            botBubble: 'rgba(255, 255, 255, 0.05)',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
         }
     </script>
-    <!-- Use Inter font -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
     <style>
-.code-container {
-    background: #0d0d12;
-    border: 1px solid rgba(0,191,255,0.2);
-    border-radius: 10px;
-    padding-top: 10px;
-    margin: 12px 0;
-}
-
-.code-container pre {
-    margin: 0 !important;
-    padding: 14px !important;
-    overflow-x: auto;
-}
-
-.copy-btn {
-    cursor: pointer;
-}
-
         body {
-            font-family: 'Inter', sans-serif;
-            /* Futuristic radial gradient background */
-            background-color: #0a0a0f;
-            background-image: radial-gradient(circle at 10% 10%, rgba(0, 191, 255, 0.1) 0%, transparent 30%),
-                              radial-gradient(circle at 90% 80%, rgba(0, 191, 255, 0.1) 0%, transparent 30%);
-            overflow: hidden;
+            background-color: #050507;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
         }
-        /* Custom scrollbar */
-        #chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-messages::-webkit-scrollbar-track {
-            background: #121218;
-            border-radius: 10px;
-        }
-        #chat-messages::-webkit-scrollbar-thumb {
-            background-color: #1E1E28;
-            border-radius: 10px;
-        }
-        #chat-messages::-webkit-scrollbar-thumb:hover {
-            background-color: #2D2D3D;
-        }
-        .chat-bubble {
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        /* Glow effect for the main container */
-        .glow-container {
-            box-shadow: 0 0 15px 5px rgba(0, 191, 255, 0.1), 0 0 2px 1px rgba(0, 191, 255, 0.15);
-            border: 1px solid rgba(0, 191, 255, 0.2);
-        }
-        /* Glow effect for input */
-        .glow-input:focus-within {
-            box-shadow: 0 0 10px 2px rgba(0, 191, 255, 0.2);
-            border-color: rgba(0, 191, 255, 0.5);
-        }
-        /* Markdown code blocks */
-        .chat-bubble code {
-            background-color: #0a0a0f;
-            color: #00BFFF;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
-        }
-        .chat-bubble pre {
-            background-color: #0a0a0f;
-            color: #E0E0E0;
-            padding: 12px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.9em;
-        }
-        .chat-bubble pre code {
-            background-color: transparent;
-            padding: 0;
-        }
-        .chat-bubble ul, .chat-bubble ol {
-            padding-left: 20px;
-            margin-top: 8px;
-            margin-bottom: 8px;
-        }
-        .chat-bubble ul li {
-            list-style-type: disc;
-        }
-        .chat-bubble ol li {
-            list-style-type: decimal;
-        }
-    </style>
-<!-- Prism JS for Syntax Highlighting -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
 
-</head>
-<body class="h-full bg-nexa-dark text-nexa-text flex items-center justify-center p-4">
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-    <div class="glow-container bg-nexa-gray rounded-2xl shadow-2xl w-full max-w-lg h-[700px] max-h-[90vh] flex flex-col overflow-hidden">
+        /* Glass Effect */
+        .glass-panel {
+            background: var(--nexa-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.nexa.border');
+        }
+
+        /* Code Block Styling */
+        pre {
+            border-radius: 0.5rem !important;
+            margin: 0.5rem 0 !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: #0d0d12 !important;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.85em !important;
+        }
         
+        /* Markdown Styles */
+        .prose p { margin-bottom: 0.5rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 0.5rem; }
+        .prose ol { list-style-type: decimal; padding-left: 1.2rem; margin-bottom: 0.5rem; }
+        .prose strong { color: white; font-weight: 600; }
+        .prose a { color: #60a5fa; text-decoration: underline; }
+    </style>
+</head>
+<body class="h-screen text-gray-100 flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Main Interface -->
+    <div class="glass-panel w-full max-w-4xl h-full max-h-[850px] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+        
+        <!-- Decorative Glow -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-b-full opacity-75"></div>
+
         <!-- Header -->
-        <header class="p-5 border-b border-nexa-light-gray flex items-center justify-between space-x-3">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-gradient-to-r from-nexa-accent to-blue-400 rounded-lg shadow-lg">
-                    <!-- Simple SVG logo -->
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
-                    </svg>
+        <header class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+            <div class="flex items-center gap-3">
+                <div class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </div>
-                <h1 class="text-xl font-semibold text-white">Nexa AI Assistant</h1>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide text-white">NEXA</h1>
+                    <p class="text-xs text-gray-400 font-mono">SYSTEM_ONLINE</p>
+                </div>
             </div>
-            <!-- Clear Chat Button -->
-            <button id="clear-chat-btn" class="text-nexa-text-dim hover:text-nexa-accent transition-colors" title="Clear Chat">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                </svg>
+            <button id="clear-btn" class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all group" title="Reset Session">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-90 transition-transform"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
         </header>
 
-        <!-- Chat Messages -->
-        <div id="chat-messages" class="flex-1 p-6 space-y-5 overflow-y-auto">
-            <!-- Initial bot message -->
-            <div class="flex justify-start group">
-                <div class="chat-bubble bg-nexa-light-gray p-4 rounded-xl rounded-bl-none relative">
-                    <p class="text-nexa-text" data-raw-text="Hello! How can I help you today?">Hello! How can I help you today?</p>
+        <!-- Chat Area -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+            <!-- Intro Message -->
+            <div class="flex gap-4 animate-fade-in">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl rounded-tl-sm max-w-[85%] text-sm text-gray-200 shadow-md">
+                    <p>Hello, I am <span class="font-bold text-white">Nexa</span>. I'm ready to help with coding, analysis, or any task you have in mind.</p>
                 </div>
             </div>
-            <!-- Chat messages will be appended here -->
         </div>
 
-        <!-- Message Input -->
-        <footer class="p-5 border-t border-nexa-light-gray">
-            <form id="chat-form" class="flex items-center space-x-3 glow-input bg-nexa-light-gray border border-gray-700 rounded-lg transition-all duration-300">
+        <!-- Input Area -->
+        <div class="p-5 border-t border-white/5 bg-black/20">
+            <form id="chat-form" class="relative">
                 <input 
                     type="text" 
-                    id="message-input"
-                    placeholder="Talk to Nexa..." 
+                    id="user-input" 
+                    class="w-full bg-nexa-botBubble border border-white/10 rounded-xl px-5 py-4 pr-14 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all shadow-inner font-mono"
+                    placeholder="Type your command..."
                     autocomplete="off"
-                    class="flex-1 bg-transparent px-4 py-3 text-nexa-text placeholder-nexa-text-dim focus:outline-none"
                 >
                 <button 
-                    type="submit"
-                    class="bg-nexa-accent text-white rounded-lg p-3 m-1 hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    aria-label="Send message"
+                    type="submit" 
+                    class="absolute right-2 top-2 p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-900/20 group"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </form>
-        </footer>
+            <div class="text-center mt-2">
+                <span class="text-[10px] text-gray-600 uppercase tracking-widest">Powered by Nexa Core</span>
+            </div>
+        </div>
     </div>
 
     <script>
         const chatForm = document.getElementById('chat-form');
-        const messageInput = document.getElementById('message-input');
-        const chatMessages = document.getElementById('chat-messages');
-        const clearChatBtn = document.getElementById('clear-chat-btn');
-        const serverUrl = 'https://nexa-ai-backend-f5fi.onrender.com/ask';
+        const userInput = document.getElementById('user-input');
+        const chatContainer = document.getElementById('chat-container');
+        const clearBtn = document.getElementById('clear-btn');
 
+        // --- CONFIGURATION ---
+        // Ensure this URL matches your Render deployment
+        const API_URL = "https://nexa-ai-backend-f5fi.onrender.com/ask";
+        
+        let history = [];
 
+        // Initialize History with System Persona (optional, but good for keeping track)
+        history.push({
+            role: "model",
+            parts: [{ text: "Hello, I am Nexa." }]
+        });
 
-        chatForm.addEventListener('submit', handleFormSubmit);
-        clearChatBtn.addEventListener('click', clearChat);
-
-        // --- Helper Functions ---
-
-        /**
-         * Escapes HTML special characters to prevent XSS.
-         */
-        function escapeHTML(str) {
-            return str.replace(/[&<>"']/g, function(match) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[match];
-            });
-        }
-
-        /**
-         * Parses a simple version of Markdown.
-         * Handles: **bold**, *italic*, `code`, \n, and lists.
-         */
-       function parseSimpleMarkdown(text) {
-    // Escape HTML
-    let escaped = escapeHTML(text);
-
-    // Fenced code block handling
-    escaped = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-        const language = lang || "plaintext";
-        return `
-            <div class="code-container relative group">
-                <button class="copy-btn absolute top-2 right-2 bg-nexa-dark text-nexa-text-dim px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition">
-                    Copy
-                </button>
-                <pre class="rounded-lg"><code class="language-${language}">${escapeHTML(code)}</code></pre>
-            </div>
-        `;
-    });
-
-    // Inline code
-    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Bold
-    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Italic
-    escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // New lines
-    escaped = escaped.replace(/\n/g, "<br>");
-
-    return escaped;
-}
-
-
-
-        /**
-         * Copies text to the clipboard using a reliable fallback.
-         */
-        function copyToClipboard(text, button) {
-            const tempTextarea = document.createElement('textarea');
-            tempTextarea.value = text;
-            tempTextarea.style.position = 'absolute';
-            tempTextarea.style.left = '-9999px';
-            document.body.appendChild(tempTextarea);
-            tempTextarea.select();
-            tempTextarea.setSelectionRange(0, 99999); // For mobile
-            try {
-                document.execCommand('copy');
-                // Visual feedback
-                button.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5"/>
-                    </svg>
-                `;
-                setTimeout(() => {
-                    button.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                    `;
-                }, 1500);
-            } catch (err) {
-                console.error('Failed to copy text:', err);
-                // You could show an error message to the user here
-            }
-            document.body.removeChild(tempTextarea);
-        }
-
-        // --- Core Functions ---
-
-        async function handleFormSubmit(e) {
+        // --- EVENTS ---
+        chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const message = messageInput.value.trim();
+            const message = userInput.value.trim();
             if (!message) return;
 
-            appendMessage(message, 'user');
-            messageInput.value = '';
-            const typingIndicator = showTypingIndicator();
+            // 1. Add User Message
+            addMessage(message, 'user');
+            userInput.value = '';
+            
+            // Update History
+            history.push({ role: "user", parts: [{ text: message }] });
+
+            // 2. Show Loading State
+            const loadingId = addLoadingIndicator();
 
             try {
-                const response = await fetch(serverUrl, {
+                // 3. Call API
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message }),
+                    body: JSON.stringify({ history: history }) // Sending full history
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error("Server Error");
                 const data = await response.json();
-                removeTypingIndicator(typingIndicator);
-                appendMessage(data.reply || 'Sorry, I had trouble getting a response.', 'bot');
+
+                // 4. Remove Loading & Show Response
+                removeLoadingIndicator(loadingId);
+                const reply = data.reply || "System Error: No response received.";
+                
+                addMessage(reply, 'bot');
+                
+                // Update History
+                history.push({ role: "model", parts: [{ text: reply }] });
 
             } catch (error) {
-                console.error('Error fetching from server:', error);
-                removeTypingIndicator(typingIndicator);
-                appendMessage(`⚠️ Error: Could not connect to the AI. Please ensure the server is running. (${error.message})`, 'bot-error');
+                removeLoadingIndicator(loadingId);
+                addMessage("Connection Error: Unable to reach Nexa servers.", 'bot', true);
+                console.error(error);
             }
-        }
+        });
 
-        function appendMessage(text, sender) {
-            const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex', 'group'); // Add group for copy-hover
+        clearBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = '';
+            history = [];
+            // Re-add Intro
+            const introHTML = `
+            <div class="flex gap-4 animate-fade-in">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl rounded-tl-sm max-w-[85%] text-sm text-gray-200 shadow-md">
+                    <p>Session cleared. Ready for new instructions.</p>
+                </div>
+            </div>`;
+            chatContainer.insertAdjacentHTML('beforeend', introHTML);
+        });
 
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add('chat-bubble', 'p-4', 'rounded-xl', 'relative');
+        // --- UI FUNCTIONS ---
+        function addMessage(text, sender, isError = false) {
+            const isUser = sender === 'user';
+            const align = isUser ? 'justify-end' : 'justify-start';
             
-            // Use innerHTML for markdown, but store raw text for copying
-            messageBubble.innerHTML = parseSimpleMarkdown(text);
-            messageBubble.setAttribute('data-raw-text', text); // Store raw text
+            // Markdown Parsing (Simple)
+            let formattedText = text
+                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>') // Code blocks
+                .replace(/`([^`]+)`/g, '<code class="bg-white/10 px-1 py-0.5 rounded text-blue-300 font-mono text-xs">$1</code>') // Inline code
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>') // Bold
+                .replace(/\n/g, '<br>');
 
-            if (sender === 'user') {
-                messageWrapper.classList.add('justify-end');
-                messageBubble.classList.add('bg-nexa-accent', 'text-white', 'rounded-br-none');
-            } else {
-                messageWrapper.classList.add('justify-start');
-                messageBubble.classList.add('bg-nexa-light-gray', 'rounded-bl-none');
-                
-                if (sender === 'bot-error') {
-                    messageBubble.classList.add('text-red-400');
-                } else {
-                    messageBubble.classList.add('text-nexa-text');
-                    // Add copy button only for successful bot messages
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'absolute -top-2 -right-2 p-1 bg-nexa-dark rounded-full text-nexa-text-dim opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100';
-                    copyBtn.title = 'Copy text';
-                    copyBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                    `;
-                    copyBtn.onclick = (e) => {
-                        e.stopPropagation(); // Don't trigger other events
-                        copyToClipboard(text, copyBtn);
-                    };
-                    messageBubble.appendChild(copyBtn);
-                }
-            }
+            const html = `
+                <div class="flex gap-4 ${align} animate-fade-in group">
+                    ${!isUser ? `
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+                    </div>` : ''}
+                    
+                    <div class="${isUser ? 'bg-blue-600 text-white' : 'glass-panel text-gray-200'} ${isError ? 'border-red-500/50 text-red-200' : ''} p-4 rounded-2xl ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'} max-w-[85%] text-sm shadow-md prose prose-invert leading-relaxed relative">
+                         ${isUser ? '' : '<button class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-gray-400 hover:text-white" onclick="copyText(this)">COPY</button>'}
+                         ${formattedText}
+                    </div>
 
-            messageWrapper.appendChild(messageBubble);
-            chatMessages.appendChild(messageWrapper);
-            scrollToBottom();
-        }
-
-        function showTypingIndicator() {
-            const typingWrapper = document.createElement('div');
-            typingWrapper.id = 'typing-indicator';
-            typingWrapper.classList.add('flex', 'justify-start');
-            
-            const typingBubble = document.createElement('div');
-            typingBubble.classList.add('chat-bubble', 'bg-nexa-light-gray', 'p-4', 'rounded-xl', 'rounded-bl-none', 'text-nexa-text-dim');
-            typingBubble.innerHTML = `
-                <div class="flex space-x-1">
-                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
-                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
-                    <div class="w-2 h-2 bg-nexa-text-dim rounded-full animate-bounce" style="animation-delay: 0.3s;"></div>
+                    ${isUser ? `
+                    <div class="w-8 h-8 rounded-lg bg-gray-700 border border-white/10 flex items-center justify-center shrink-0 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>` : ''}
                 </div>
             `;
-            
-            typingWrapper.appendChild(typingBubble);
-            chatMessages.appendChild(typingWrapper);
+
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            Prism.highlightAll(); // Highlight syntax
             scrollToBottom();
-            return typingWrapper;
         }
 
-        function removeTypingIndicator(indicator) {
-            if (indicator) {
-                indicator.remove();
-            }
+        function addLoadingIndicator() {
+            const id = 'loading-' + Date.now();
+            const html = `
+                <div id="${id}" class="flex gap-4 animate-fade-in">
+                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+                    </div>
+                    <div class="glass-panel p-4 rounded-2xl rounded-tl-sm flex items-center gap-2 h-12">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeLoadingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
         function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-
-        function clearChat() {
-            chatMessages.innerHTML = '';
-            // Add the initial bot message back
-            appendMessage('Hello! How can I help you today?', 'bot');
+        
+        window.copyText = (btn) => {
+            const text = btn.parentElement.innerText.replace("COPY", "");
+            navigator.clipboard.writeText(text);
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED!";
+            setTimeout(() => btn.innerText = originalText, 2000);
         }
-document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("copy-btn")) {
-        const codeBlock = e.target.parentElement.querySelector("code").innerText;
-
-        navigator.clipboard.writeText(codeBlock)
-            .then(() => {
-                e.target.innerText = "Copied!";
-                setTimeout(() => e.target.innerText = "Copy", 1500);
-            })
-            .catch(err => console.error("Copy failed:", err));
-    }
-});
-   
- </script>
+    </script>
 </body>
 </html>
-
