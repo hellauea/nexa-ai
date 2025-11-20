@@ -3,19 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXA | AI Companion</title>
-    <!-- Tailwind CSS -->
+    <title>NEXA | Intelligent Core</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Prism JS (Syntax Highlighting) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -25,24 +17,34 @@
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        nexa: {
-                            bg: '#050507',
-                            glass: 'rgba(20, 20, 35, 0.7)',
-                            border: 'rgba(255, 255, 255, 0.08)',
-                            accent: '#3b82f6', // Blue-500
-                            accentGlow: 'rgba(59, 130, 246, 0.5)',
-                            userBubble: '#2563eb',
-                            botBubble: 'rgba(255, 255, 255, 0.05)',
+                        cyber: {
+                            black: '#030304',
+                            dark: '#0A0A0F',
+                            panel: 'rgba(20, 25, 40, 0.6)',
+                            border: 'rgba(100, 200, 255, 0.1)',
+                            primary: '#00F0FF', // Cyber Cyan
+                            primaryDim: 'rgba(0, 240, 255, 0.1)',
+                            secondary: '#7000FF', // Neon Purple
+                            text: '#E0E6ED',
+                            muted: '#94A3B8'
                         }
                     },
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.1)',
+                        'neon-hover': '0 0 15px rgba(0, 240, 255, 0.4), 0 0 30px rgba(0, 240, 255, 0.2)',
+                    },
                     animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out forwards',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scanline': 'scanline 8s linear infinite',
+                        'pulse-glow': 'pulseGlow 3s infinite',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        scanline: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 0.5 },
+                            '50%': { opacity: 1 }
                         }
                     }
                 }
@@ -52,106 +54,108 @@
 
     <style>
         body {
-            background-color: #050507;
+            background-color: #030304;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
-            background-attachment: fixed;
+                radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            color: #E0E6ED;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* Glass Effect */
+        
         .glass-panel {
-            background: var(--nexa-glass);
+            background: var(--cyber-panel);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid theme('colors.nexa.border');
+            border: 1px solid theme('colors.cyber.border');
         }
 
         /* Code Block Styling */
         pre {
-            border-radius: 0.5rem !important;
-            margin: 0.5rem 0 !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            background: #0d0d12 !important;
+            background: #0e1015 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin: 10px 0;
         }
         code {
-            font-family: 'JetBrains Mono', monospace !important;
-            font-size: 0.85em !important;
+            color: #00F0FF;
         }
         
-        /* Markdown Styles */
-        .prose p { margin-bottom: 0.5rem; }
-        .prose ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 0.5rem; }
-        .prose ol { list-style-type: decimal; padding-left: 1.2rem; margin-bottom: 0.5rem; }
-        .prose strong { color: white; font-weight: 600; }
-        .prose a { color: #60a5fa; text-decoration: underline; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
     </style>
 </head>
-<body class="h-screen text-gray-100 flex items-center justify-center p-4 sm:p-6">
+<body class="h-screen w-full flex items-center justify-center overflow-hidden selection:bg-cyber-primary selection:text-cyber-black">
 
-    <!-- Main Interface -->
-    <div class="glass-panel w-full max-w-4xl h-full max-h-[850px] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+    <!-- Main Container -->
+    <div class="relative w-full h-full max-w-5xl mx-auto flex flex-col bg-cyber-dark/80 border-x border-cyber-border shadow-2xl backdrop-blur-sm sm:my-4 sm:h-[95%] sm:rounded-2xl sm:border-y">
         
-        <!-- Decorative Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-b-full opacity-75"></div>
+        <!-- Decorative Scanline -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-20 rounded-2xl">
+            <div class="w-full h-full bg-gradient-to-b from-transparent via-cyber-primary to-transparent h-[20%] animate-scanline opacity-10"></div>
+        </div>
 
         <!-- Header -->
-        <header class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+        <header class="flex items-center justify-between px-6 py-4 border-b border-cyber-border bg-cyber-black/40 z-10">
             <div class="flex items-center gap-3">
                 <div class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-primary opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-cyber-primary"></span>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-wide text-white">NEXA</h1>
-                    <p class="text-xs text-gray-400 font-mono">SYSTEM_ONLINE</p>
+                    <h1 class="text-xl font-bold tracking-wider font-mono text-white">NEXA<span class="text-cyber-primary">_CORE</span></h1>
+                    <p class="text-[10px] text-cyber-primary uppercase tracking-[0.2em] opacity-70">System Online</p>
                 </div>
             </div>
-            <button id="clear-btn" class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all group" title="Reset Session">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-90 transition-transform"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            
+            <button id="clear-btn" class="group flex items-center gap-2 px-3 py-1.5 rounded border border-cyber-border hover:border-cyber-primary hover:bg-cyber-primaryDim transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyber-muted group-hover:text-cyber-primary transition-colors"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span class="text-xs font-mono text-cyber-muted group-hover:text-cyber-primary">RESET</span>
             </button>
         </header>
 
         <!-- Chat Area -->
-        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
-            <!-- Intro Message -->
-            <div class="flex gap-4 animate-fade-in">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+        <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 z-10 scroll-smooth">
+            <!-- Welcome Message -->
+            <div class="flex gap-4">
+                <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
                 </div>
-                <div class="glass-panel p-4 rounded-2xl rounded-tl-sm max-w-[85%] text-sm text-gray-200 shadow-md">
-                    <p>Hello, I am <span class="font-bold text-white">Nexa</span>. I'm ready to help with coding, analysis, or any task you have in mind.</p>
+                <div class="glass-panel p-4 rounded-xl rounded-tl-none max-w-[85%] shadow-lg">
+                    <p class="text-sm leading-relaxed">Greetings. I am <span class="text-cyber-primary font-bold">Nexa</span>. My systems are ready to assist you with coding, analysis, and data processing.</p>
                 </div>
             </div>
         </div>
 
         <!-- Input Area -->
-        <div class="p-5 border-t border-white/5 bg-black/20">
-            <form id="chat-form" class="relative">
+        <div class="p-6 border-t border-cyber-border bg-cyber-black/60 z-20">
+            <form id="chat-form" class="relative flex items-center">
+                <div class="absolute left-4 text-cyber-primary animate-pulse-glow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                </div>
                 <input 
                     type="text" 
                     id="user-input" 
-                    class="w-full bg-nexa-botBubble border border-white/10 rounded-xl px-5 py-4 pr-14 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all shadow-inner font-mono"
-                    placeholder="Type your command..."
+                    class="w-full bg-black/50 border border-cyber-border rounded-lg py-4 pl-12 pr-14 text-sm text-white placeholder-cyber-muted/50 focus:outline-none focus:border-cyber-primary focus:ring-1 focus:ring-cyber-primary transition-all font-mono shadow-inner"
+                    placeholder="Enter command..."
                     autocomplete="off"
                 >
                 <button 
                     type="submit" 
-                    class="absolute right-2 top-2 p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-900/20 group"
+                    class="absolute right-2 p-2 bg-cyber-primary/10 hover:bg-cyber-primary hover:text-black text-cyber-primary rounded transition-all duration-200"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </form>
-            <div class="text-center mt-2">
-                <span class="text-[10px] text-gray-600 uppercase tracking-widest">Powered by Nexa Core</span>
-            </div>
         </div>
+
     </div>
 
     <script>
@@ -160,147 +164,137 @@
         const chatContainer = document.getElementById('chat-container');
         const clearBtn = document.getElementById('clear-btn');
 
-        // --- CONFIGURATION ---
-        // Ensure this URL matches your Render deployment
+        // === CONFIGURATION ===
         const API_URL = "https://nexa-ai-backend-f5fi.onrender.com/ask";
-        
         let history = [];
 
-        // Initialize History with System Persona (optional, but good for keeping track)
+        // Initial Persona Context
         history.push({
             role: "model",
             parts: [{ text: "Hello, I am Nexa." }]
         });
 
-        // --- EVENTS ---
+        // === EVENT LISTENERS ===
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const message = userInput.value.trim();
             if (!message) return;
 
-            // 1. Add User Message
-            addMessage(message, 'user');
+            // 1. Display User Message
+            appendMessage(message, 'user');
             userInput.value = '';
             
-            // Update History
+            // 2. Add to History
             history.push({ role: "user", parts: [{ text: message }] });
 
-            // 2. Show Loading State
-            const loadingId = addLoadingIndicator();
+            // 3. Show Loading
+            const loadingId = showLoading();
 
             try {
-                // 3. Call API
+                // 4. Send to Backend
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: history }) // Sending full history
+                    body: JSON.stringify({ history: history }) 
                 });
 
-                if (!response.ok) throw new Error("Server Error");
-                const data = await response.json();
+                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
-                // 4. Remove Loading & Show Response
-                removeLoadingIndicator(loadingId);
-                const reply = data.reply || "System Error: No response received.";
+                const data = await response.json();
+                removeLoading(loadingId);
                 
-                addMessage(reply, 'bot');
+                const reply = data.reply || "Error: Empty response from neural net.";
                 
-                // Update History
+                // 5. Display Bot Response
+                appendMessage(reply, 'bot');
+                
+                // 6. Update History
                 history.push({ role: "model", parts: [{ text: reply }] });
 
             } catch (error) {
-                removeLoadingIndicator(loadingId);
-                addMessage("Connection Error: Unable to reach Nexa servers.", 'bot', true);
                 console.error(error);
+                removeLoading(loadingId);
+                appendMessage(`CONNECTION FAILURE: ${error.message}`, 'error');
             }
         });
 
         clearBtn.addEventListener('click', () => {
             chatContainer.innerHTML = '';
             history = [];
-            // Re-add Intro
-            const introHTML = `
-            <div class="flex gap-4 animate-fade-in">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl rounded-tl-sm max-w-[85%] text-sm text-gray-200 shadow-md">
-                    <p>Session cleared. Ready for new instructions.</p>
-                </div>
-            </div>`;
-            chatContainer.insertAdjacentHTML('beforeend', introHTML);
+            appendMessage("Memory purged. Systems reset.", 'bot');
         });
 
-        // --- UI FUNCTIONS ---
-        function addMessage(text, sender, isError = false) {
+        // === UI FUNCTIONS ===
+        function appendMessage(text, sender) {
             const isUser = sender === 'user';
-            const align = isUser ? 'justify-end' : 'justify-start';
+            const isError = sender === 'error';
             
-            // Markdown Parsing (Simple)
-            let formattedText = text
-                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>') // Code blocks
-                .replace(/`([^`]+)`/g, '<code class="bg-white/10 px-1 py-0.5 rounded text-blue-300 font-mono text-xs">$1</code>') // Inline code
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>') // Bold
-                .replace(/\n/g, '<br>');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex gap-4 ${isUser ? 'justify-end' : ''} animate-[fadeIn_0.3s_ease-out]`;
 
-            const html = `
-                <div class="flex gap-4 ${align} animate-fade-in group">
-                    ${!isUser ? `
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg mt-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
-                    </div>` : ''}
-                    
-                    <div class="${isUser ? 'bg-blue-600 text-white' : 'glass-panel text-gray-200'} ${isError ? 'border-red-500/50 text-red-200' : ''} p-4 rounded-2xl ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'} max-w-[85%] text-sm shadow-md prose prose-invert leading-relaxed relative">
-                         ${isUser ? '' : '<button class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-gray-400 hover:text-white" onclick="copyText(this)">COPY</button>'}
-                         ${formattedText}
-                    </div>
+            // Formatting (Simple Markdown)
+            let content = text
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/`([^`]+)`/g, '<code class="bg-cyber-primaryDim px-1 rounded text-cyber-primary">$1</code>');
 
-                    ${isUser ? `
-                    <div class="w-8 h-8 rounded-lg bg-gray-700 border border-white/10 flex items-center justify-center shrink-0 mt-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>` : ''}
+            // Wrap code blocks in pre tags (simple detection)
+            if (content.includes('```')) {
+                content = content.replace(/```(\w+)?<br>([\s\S]*?)<br>```/g, '<pre><code>$2</code></pre>');
+                content = content.replace(/```<br>([\s\S]*?)<br>```/g, '<pre><code>$1</code></pre>');
+            }
+
+            const botIcon = `
+                <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
+                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                </div>`;
+
+            const userIcon = `
+                <div class="w-10 h-10 rounded bg-cyber-secondary/20 border border-cyber-secondary/50 flex items-center justify-center shrink-0">
+                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>`;
+
+            const bubbleStyle = isUser 
+                ? 'bg-cyber-secondary/10 border-cyber-secondary/30 text-white rounded-tr-none' 
+                : (isError ? 'bg-red-900/20 border-red-500/50 text-red-200' : 'glass-panel rounded-tl-none text-gray-200');
+
+            wrapper.innerHTML = `
+                ${!isUser ? botIcon : ''}
+                <div class="${bubbleStyle} p-4 rounded-xl max-w-[85%] shadow-lg border text-sm leading-relaxed break-words font-sans">
+                    ${content}
                 </div>
+                ${isUser ? userIcon : ''}
             `;
 
-            chatContainer.insertAdjacentHTML('beforeend', html);
-            Prism.highlightAll(); // Highlight syntax
+            chatContainer.appendChild(wrapper);
             scrollToBottom();
         }
 
-        function addLoadingIndicator() {
-            const id = 'loading-' + Date.now();
+        function showLoading() {
+            const id = 'loader-' + Date.now();
             const html = `
-                <div id="${id}" class="flex gap-4 animate-fade-in">
-                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg mt-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.65 1.33-1.5 1.33S11 4.74 11 4a2 2 0 0 1 1-2Z"/><path d="M12 14c2.5 0 4.5-2 6-5"/><path d="M6 9c1.5 3 3.5 5 6 5"/><path d="M12 14v8"/><path d="M8 19h8"/><path d="M5 4c0 4 3 7 7 7s7-3 7-7"/></svg>
+                <div id="${id}" class="flex gap-4 animate-[fadeIn_0.3s_ease-out]">
+                    <div class="w-10 h-10 rounded bg-cyber-primary/10 border border-cyber-primary/30 flex items-center justify-center shrink-0">
+                        <svg class="animate-spin" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
                     </div>
-                    <div class="glass-panel p-4 rounded-2xl rounded-tl-sm flex items-center gap-2 h-12">
-                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
-                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="glass-panel p-4 rounded-xl rounded-tl-none flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                        <span class="w-1.5 h-1.5 bg-cyber-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
                     </div>
-                </div>
-            `;
+                </div>`;
             chatContainer.insertAdjacentHTML('beforeend', html);
             scrollToBottom();
             return id;
         }
 
-        function removeLoadingIndicator(id) {
+        function removeLoading(id) {
             const el = document.getElementById(id);
             if (el) el.remove();
         }
 
         function scrollToBottom() {
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-        
-        window.copyText = (btn) => {
-            const text = btn.parentElement.innerText.replace("COPY", "");
-            navigator.clipboard.writeText(text);
-            const originalText = btn.innerText;
-            btn.innerText = "COPIED!";
-            setTimeout(() => btn.innerText = originalText, 2000);
         }
     </script>
 </body>
