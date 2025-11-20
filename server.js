@@ -1,58 +1,81 @@
-// server.js - FIXED & STABLE NEXA BACKEND
-
+// server.js
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 
 const app = express();
-app.use(cors());
+
+// Allow requests from your frontend
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-const API_KEY = process.env.API_KEY;
+// Environment API key (set this in Render env)
+const API_KEY = process.env.API_KEY || "";
 
-// Nexa System Persona
-const SYSTEM_PROMPT = `
-You are Nexa, a smart cybersecurity AI assistant.
-You were created by a student studying cybersecurity at REVA University.
-Always call yourself Nexa.
-Be friendly, confident, and helpful.
-Remember previous conversation context.
-When giving code, format it inside proper code blocks.
+// Nexa Persona
+const NEXA_PROMPT = `
+You are Nexa — an intelligent desktop AI assistant.
+Rules:
+• Friendly but smart
+• Short, clear answers
+• Helps with coding, cybersecurity, and system tasks
+• Calls yourself “Nexa”
+• Warm, confident personality
 `;
 
-let conversationHistory = [];
+// Serve static files if needed
+app.use(express.static("public"));
 
-// Health Check
+// ✅ Health Check Route
 app.get("/", (req, res) => {
-  res.send("✅ Nexa Backend Running");
+  res.send("✅ Nexa backend is running");
 });
 
-// Main AI Route
+// ✅ Browser-friendly GET route (prevents 'Cannot GET /ask' error)
+app.get("/ask", (req, res) => {
+  res.send("✅ Nexa Gemini backend alive. Use POST method.");
+});
+
+// ✅ MAIN AI ROUTE
 app.post("/ask", async (req, res) => {
   try {
-    const userMessage = req.body.message;
+    let userText = "";
 
-    if (!API_KEY) {
-      return res.status(500).json({ reply: "API Key missing in server." });
+    if (req.body.message) {
+      userText = String(req.body.message);
+    } 
+    else if (Array.isArray(req.body.history)) {
+      const last = req.body.history[req.body.history.length - 1];
+      if (last && last.parts && Array.isArray(last.parts)) {
+        userText = last.parts.map(p => p.text || "").join("\n");
+      } else {
+        userText = JSON.stringify(req.body.history);
+      }
+    } 
+    else {
+      return res.status(400).json({ reply: "Bad request format" });
     }
 
-    conversationHistory.push({
-      role: "user",
-      parts: [{ text: userMessage }],
-    });
+    if (!API_KEY) {
+      console.error("Missing API_KEY in environment");
+      return res.status(500).json({ reply: "Server misconfigured: API_KEY not set." });
+    }
 
     const payload = {
       contents: [
         {
           role: "user",
-          parts: [{ text: SYSTEM_PROMPT }],
+          parts: [
+            {
+              text: `${NEXA_PROMPT}\n\nUser: ${userText}`,
+            },
+          ],
         },
-        ...conversationHistory,
       ],
     };
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+    const result = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,26 +83,31 @@ app.post("/ask", async (req, res) => {
       }
     );
 
-    const data = await response.json();
+    const data = await result.json();
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "⚠️ Nexa failed to respond.";
+    if (!result.ok) {
+      console.error("Gemini API error:", data);
+      return res.status(502).json({
+        reply: "⚠️ Gemini API error: " + (data.error?.message || result.statusText),
+      });
+    }
 
-    conversationHistory.push({
-      role: "model",
-      parts: [{ text: reply }],
-    });
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    res.json({ reply });
+    if (!text) {
+      return res.json({ reply: "⚠️ No response from Gemini." });
+    }
 
-  } catch (error) {
-    console.error("SERVER ERROR:", error);
-    res.status(500).json({ reply: "⚠️ Server crashed." });
+    return res.json({ reply: text });
+
+  } catch (err) {
+    console.error("SERVER ERROR:", err);
+    return res.status(500).json({ reply: "⚠️ Server error." });
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// ✅ Render Port Support
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 app.listen(PORT, () => {
-  console.log(`🔥 Nexa backend live on port ${PORT}`);
+  console.log(`🔥 Nexa backend running on ${PORT}`);
 });
