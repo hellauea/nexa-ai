@@ -1,113 +1,121 @@
-// server.js
+// server.js - FINAL NEXA BACKEND
+
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 
 const app = express();
 
-// Allow requests from your frontend
+// Allow frontend access
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Environment API key (set this in Render env)
+// API Key from Render Environment Variables
 const API_KEY = process.env.API_KEY || "";
 
-// Nexa Persona
+// ================= NEXA CORE PERSONA =================
 const NEXA_PROMPT = `
 You are Nexa — an intelligent desktop AI assistant.
-Rules:
+
+IDENTITY:
+- Your name is Nexa.
+- You were created by a cybersecurity student from REVA University, Bangalore.
+- You are NOT Google AI. Never say you are Google AI.
+
+BEHAVIOUR RULES:
 • Friendly but smart
-• Short, clear answers
-• Helps with coding, cybersecurity, and system tasks
-• Calls yourself “Nexa”
-• Warm, confident personality
+• Short, clear responses
+• Expert in coding & cybersecurity
+• Always call yourself Nexa
+• Maintain memory of conversation
+• Use triple backticks for all code
+• Speak confidently and professionally
+
+If asked who created you, respond:
+"I was created by a cybersecurity student from REVA University Bangalore."
 `;
 
-// Serve static files if needed
-app.use(express.static("public"));
-
-// ✅ Health Check Route
+// ================= HEALTH ROUTES =================
 app.get("/", (req, res) => {
-  res.send("✅ Nexa backend is running");
+  res.send("✅ Nexa backend is running successfully");
 });
 
-// ✅ Browser-friendly GET route (prevents 'Cannot GET /ask' error)
 app.get("/ask", (req, res) => {
-  res.send("✅ Nexa Gemini backend alive. Use POST method.");
+  res.send("✅ Nexa AI active - Use POST method to communicate.");
 });
 
-// ✅ MAIN AI ROUTE
+// ================= MAIN AI ROUTE =================
 app.post("/ask", async (req, res) => {
   try {
-    let userText = "";
+    let contents = [];
 
-    if (req.body.message) {
-      userText = String(req.body.message);
+    // Handle history-based memory
+    if (Array.isArray(req.body.history)) {
+      contents = req.body.history;
     } 
-    else if (Array.isArray(req.body.history)) {
-      const last = req.body.history[req.body.history.length - 1];
-      if (last && last.parts && Array.isArray(last.parts)) {
-        userText = last.parts.map(p => p.text || "").join("\n");
-      } else {
-        userText = JSON.stringify(req.body.history);
-      }
+    // Fallback single message mode
+    else if (req.body.message) {
+      contents = [
+        {
+          role: "user",
+          parts: [{ text: req.body.message }]
+        }
+      ];
     } 
     else {
-      return res.status(400).json({ reply: "Bad request format" });
+      return res.status(400).json({ reply: "Invalid request format" });
     }
 
     if (!API_KEY) {
-      console.error("Missing API_KEY in environment");
-      return res.status(500).json({ reply: "Server misconfigured: API_KEY not set." });
+      return res.status(500).json({
+        reply: "Server error: API_KEY not configured on Render"
+      });
     }
 
-    const payload = {
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `${NEXA_PROMPT}\n\nUser: ${userText}`,
-            },
-          ],
-        },
-      ],
-    };
+    // Inject Nexa persona before conversation
+    contents.unshift({
+      role: "system",
+      parts: [{ text: NEXA_PROMPT }]
+    });
 
-    const result = await fetch(
+    const payload = { contents };
+
+    const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       }
     );
 
-    const data = await result.json();
+    const data = await response.json();
 
-    if (!result.ok) {
-      console.error("Gemini API error:", data);
+    if (!response.ok) {
+      console.error("Gemini error:", data);
       return res.status(502).json({
-        reply: "⚠️ Gemini API error: " + (data.error?.message || result.statusText),
+        reply: "⚠️ Nexa engine failed to respond properly."
       });
     }
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      return res.json({ reply: "⚠️ No response from Gemini." });
+      return res.json({ reply: "⚠️ Nexa received no response." });
     }
 
     return res.json({ reply: text });
 
-  } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return res.status(500).json({ reply: "⚠️ Server error." });
+  } catch (error) {
+    console.error("SERVER ERROR:", error);
+    return res.status(500).json({
+      reply: "⚠️ Internal Nexa core failure."
+    });
   }
 });
 
-// ✅ Render Port Support
-const PORT = parseInt(process.env.PORT, 10) || 3000;
+// ================= PORT HANDLER =================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🔥 Nexa backend running on ${PORT}`);
+  console.log(`🔥 Nexa backend live on port ${PORT}`);
 });
