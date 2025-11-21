@@ -1,5 +1,5 @@
 // server.js
-
+const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 
@@ -121,5 +121,6 @@ const PORT = parseInt(process.env.PORT, 10) || 3000;
 app.listen(PORT, () => {
   console.log(`🔥 Nexa backend running on ${PORT}`);
 });
+
 
 
