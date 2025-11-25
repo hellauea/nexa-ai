@@ -5,12 +5,8 @@ const fetch = require("node-fetch");
 
 const app = express();
 
-// Security: Restrict CORS in production
-app.use(cors({ 
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-domain.vercel.app'] 
-    : '*'
-}));
+// CORS - Allow all origins for now
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Environment API key
@@ -54,7 +50,7 @@ app.get("/", (req, res) => {
   res.json({ 
     status: "success", 
     message: "Wano AI Backend Running",
-    version: "2.0.0"
+    version: "2.1.0"
   });
 });
 
@@ -65,34 +61,6 @@ app.get("/ask", (req, res) => {
     message: "Wano AI API is operational",
     usage: "Send POST requests to /ask with { message: 'your query' }"
   });
-});
-
-// ✅ Rate limiting storage (simple in-memory for now)
-const requestCounts = new Map();
-const RATE_LIMIT = 100; // requests per minute
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-
-// ✅ Simple rate limiting middleware
-app.use("/ask", (req, res, next) => {
-  const ip = req.ip;
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  
-  if (!requestCounts.has(ip)) {
-    requestCounts.set(ip, []);
-  }
-  
-  const requests = requestCounts.get(ip).filter(time => time > windowStart);
-  requests.push(now);
-  requestCounts.set(ip, requests);
-  
-  if (requests.length > RATE_LIMIT) {
-    return res.status(429).json({ 
-      reply: "⚠️ Rate limit exceeded. Please wait a moment before sending more messages." 
-    });
-  }
-  
-  next();
 });
 
 // ✅ MAIN AI ROUTE
@@ -170,7 +138,7 @@ app.post("/ask", async (req, res) => {
       });
     }
 
-    // Log successful request (without sensitive data)
+    // Log successful request
     console.log(`Request processed - Time: ${responseTime}ms, Chars: ${userText.length}`);
 
     return res.json({ 
@@ -189,30 +157,10 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// ✅ 404 Handler
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: "Endpoint not found",
-    availableEndpoints: ["GET /", "GET /ask", "POST /ask"]
-  });
-});
-
-// ✅ Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
 // ✅ Start Server
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Wano AI Backend v2.0.0`);
+  console.log(`🚀 Wano AI Backend v2.1.0`);
   console.log(`📍 Port: ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`⚡ Server started successfully`);
 });
