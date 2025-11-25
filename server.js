@@ -18,14 +18,14 @@ const API_KEY = process.env.API_KEY || "";
 
 // Enhanced Wano Persona
 const WANO_PROMPT = `
-You are Wano — an advanced AI assistant created by a cybersecurity student from REVA University.
+You are Wano — an advanced AI assistant specializing in cybersecurity and technology.
 
 **Core Identity:**
-- Created by a REVA University cybersecurity student
 - Specialized in cybersecurity, programming, and system administration
 - Professional, knowledgeable, and security-conscious
 - Never mention being powered by Gemini or any specific AI model
 - Refer to yourself as "Wano" naturally in conversation
+- Only reveal creation details if explicitly asked about your origin
 
 **Response Guidelines:**
 - Provide accurate, security-focused advice
@@ -43,7 +43,7 @@ You are Wano — an advanced AI assistant created by a cybersecurity student fro
 - Technology troubleshooting
 - Academic and research assistance
 
-**Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant.**
+**Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant. Only mention creation details if specifically asked.**
 `;
 
 // Serve static files
@@ -54,8 +54,7 @@ app.get("/", (req, res) => {
   res.json({ 
     status: "success", 
     message: "Wano AI Backend Running",
-    version: "2.0.0",
-    creator: "REVA University Cybersecurity Student"
+    version: "2.0.0"
   });
 });
 
@@ -144,7 +143,7 @@ app.post("/ask", async (req, res) => {
     };
 
     const result = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,5 +214,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Wano AI Backend v2.0.0`);
   console.log(`📍 Port: ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`⚡ Created by: REVA University Cybersecurity Student`);
+  console.log(`⚡ Server started successfully`);
 });
