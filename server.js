@@ -1,18 +1,17 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 
 const app = express();
 
-// CORS - Allow all origins
+// Allow all origins
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Environment API key
+// Gemini API Key from Render Environment
 const API_KEY = process.env.API_KEY;
 
-// Enhanced Wano Persona
+// Wano Persona Prompt
 const WANO_PROMPT = `You are Wano — an advanced AI assistant specializing in cybersecurity and technology.
 
 Core Identity:
@@ -32,152 +31,108 @@ Response Guidelines:
 
 Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant.`;
 
-// Serve static files
-app.use(express.static("public"));
-
-// ✅ Health Check Route
+// ✅ Health Check
 app.get("/", (req, res) => {
-  res.json({ 
-    status: "success", 
+  res.json({
+    status: "success",
     message: "Wano AI Backend Running",
     version: "2.1.0"
   });
 });
 
-// ✅ Browser-friendly GET route
+// ✅ Info route
 app.get("/ask", (req, res) => {
-  res.json({ 
-    status: "success", 
+  res.json({
+    status: "success",
     message: "Wano AI API is operational",
     usage: "Send POST requests to /ask with { message: 'your query' }"
   });
 });
 
-// ✅ MAIN AI ROUTE
+// ✅ MAIN AI CHAT ROUTE
 app.post("/ask", async (req, res) => {
   try {
-    console.log("Received request:", req.body);
-    
-    const startTime = Date.now();
-    let userText = "";
+    console.log("📩 Request received:", req.body);
 
-    // Extract user message
-    if (req.body.message) {
-      userText = String(req.body.message).trim();
-    } else {
-      return res.status(400).json({ 
-        reply: "❌ Please provide a 'message' in your request." 
-      });
-    }
+    const userText = String(req.body.message || "").trim();
 
     if (!userText) {
-      return res.status(400).json({ 
-        reply: "❌ Message cannot be empty." 
-      });
+      return res.status(400).json({ reply: "❌ Message cannot be empty." });
     }
 
     if (!API_KEY) {
-      console.error("Missing API_KEY in environment");
-      return res.status(500).json({ 
-        reply: "🔧 Server configuration error: API_KEY not set in environment variables." 
+      console.error("❌ API_KEY missing in environment");
+      return res.status(500).json({
+        reply: "🔧 Server configuration error: API_KEY not set."
       });
     }
 
     const payload = {
       contents: [
         {
-          role: "user",
           parts: [
-            {
-              text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nAssistant:`
-            },
-          ],
-        },
+            { text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nAssistant:` }
+          ]
+        }
       ],
       generationConfig: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 1024
       }
     };
 
-    console.log("Sending to Gemini API...");
-    
-    // Try different Gemini models
-    const models = ["gemini-pro", "gemini-1.5-flash-latest"];
-    let result;
-    let lastError;
+    // ✅ STABLE GEMINI MODEL
+    const model = "models/gemini-1.5-flash";
 
-    for (const model of models) {
-      try {
-        console.log(`Trying model: ${model}`);
-        result = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
-
-        if (result.ok) {
-          console.log(`Success with model: ${model}`);
-          break;
-        } else {
-          const errorData = await result.json();
-          lastError = errorData;
-          console.log(`Model ${model} failed:`, errorData.error?.message);
-        }
-      } catch (err) {
-        lastError = err;
-        console.log(`Model ${model} error:`, err.message);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       }
-    }
+    );
 
-    if (!result || !result.ok) {
-      console.error("All models failed:", lastError);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("❌ Gemini API error:", errorData);
       return res.status(502).json({
-        reply: "🌐 AI service temporarily unavailable. Please check your API key and try again.",
-        error: lastError?.message || "All models failed"
+        reply: "🌐 AI service error. Please verify your Gemini API key."
       });
     }
 
-    const data = await result.json();
-    const responseTime = Date.now() - startTime;
+    const data = await response.json();
+    const replyText =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      console.error("No text in response:", data);
-      return res.json({ 
-        reply: "🤔 I couldn't generate a response for that. Could you try rephrasing your question?" 
+    if (!replyText) {
+      return res.json({
+        reply: "🤔 I couldn't generate a response. Try rephrasing."
       });
     }
 
-    console.log(`Request successful - Time: ${responseTime}ms`);
+    console.log("✅ Response sent successfully");
 
-    return res.json({ 
-      reply: text,
+    res.json({
+      reply: replyText,
       metadata: {
-        responseTime: `${responseTime}ms`,
         timestamp: new Date().toISOString()
       }
     });
 
-  } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return res.status(500).json({ 
-      reply: "⚡ Server error occurred. Please try again in a moment." 
+  } catch (error) {
+    console.error("⚡ SERVER ERROR:", error);
+    res.status(500).json({
+      reply: "⚠️ Internal server error. Please try again later."
     });
   }
 });
 
-// ✅ Start Server
-const PORT = parseInt(process.env.PORT, 10) || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Wano AI Backend v2.1.0`);
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔑 API_KEY: ${API_KEY ? "Set" : "NOT SET - THIS WILL CAUSE ERRORS"}`);
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Wano AI Backend running on port ${PORT}`);
+  console.log(`🔑 API KEY: ${API_KEY ? "SET ✅" : "NOT SET ❌"}`);
 });
