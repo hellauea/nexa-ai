@@ -1,5 +1,6 @@
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
@@ -7,7 +8,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// --- HEALTH CHECK ---
+// Health check
 app.get("/", (req, res) => {
   res.json({
     status: "success",
@@ -16,32 +17,30 @@ app.get("/", (req, res) => {
   });
 });
 
-// --- CHAT ENDPOINT USING GEMINI ---
+// Main chat endpoint
 app.post("/ask", async (req, res) => {
   try {
-    const userMessage = req.body.message;
+    const { message } = req.body;
 
-    if (!userMessage) {
-      return res.status(400).json({ reply: "No message received." });
+    if (!message) {
+      return res.status(400).json({ reply: "No message provided." });
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({
-        reply: "Gemini API key missing in environment variables."
-      });
+    if (!apiKey) {
+      return res.status(500).json({ reply: "Gemini API Key not found." });
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: userMessage }]
+              parts: [{ text: message }]
             }
           ]
         })
@@ -52,18 +51,16 @@ app.post("/ask", async (req, res) => {
 
     const reply =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "⚠️ No response from Gemini.";
+      "⚠️ Gemini returned empty response.";
 
     res.json({ reply });
 
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    res.status(500).json({
-      reply: "Server error while contacting Gemini API."
-    });
+  } catch (err) {
+    console.error("❌ Gemini Crash:", err);
+    res.status(500).json({ reply: "Backend crashed. Check logs." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Wano Gemini backend running on port ${PORT}`);
+  console.log(`✅ Wano AI running on port ${PORT}`);
 });
