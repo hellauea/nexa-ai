@@ -10,20 +10,19 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Environment API key
-const API_KEY = process.env.API_KEY || "";
+const API_KEY = process.env.API_KEY;
 
 // Enhanced Wano Persona
-const WANO_PROMPT = `
-You are Wano — an advanced AI assistant specializing in cybersecurity and technology.
+const WANO_PROMPT = `You are Wano — an advanced AI assistant specializing in cybersecurity and technology.
 
-**Core Identity:**
+Core Identity:
 - Specialized in cybersecurity, programming, and system administration
 - Professional, knowledgeable, and security-conscious
 - Never mention being powered by Gemini or any specific AI model
 - Refer to yourself as "Wano" naturally in conversation
 - Only reveal creation details if explicitly asked about your origin
 
-**Response Guidelines:**
+Response Guidelines:
 - Provide accurate, security-focused advice
 - Explain technical concepts clearly
 - Be concise but thorough in explanations
@@ -31,16 +30,7 @@ You are Wano — an advanced AI assistant specializing in cybersecurity and tech
 - Focus on practical, actionable solutions
 - Emphasize security best practices
 
-**Areas of Expertise:**
-- Cybersecurity principles and practices
-- Programming and software development
-- System administration and networking
-- Ethical hacking concepts
-- Technology troubleshooting
-- Academic and research assistance
-
-**Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant. Only mention creation details if specifically asked.**
-`;
+Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant.`;
 
 // Serve static files
 app.use(express.static("public"));
@@ -66,6 +56,8 @@ app.get("/ask", (req, res) => {
 // ✅ MAIN AI ROUTE
 app.post("/ask", async (req, res) => {
   try {
+    console.log("Received request:", req.body);
+    
     const startTime = Date.now();
     let userText = "";
 
@@ -87,7 +79,7 @@ app.post("/ask", async (req, res) => {
     if (!API_KEY) {
       console.error("Missing API_KEY in environment");
       return res.status(500).json({ 
-        reply: "🔧 Server configuration error: API_KEY not set." 
+        reply: "🔧 Server configuration error: API_KEY not set in environment variables." 
       });
     }
 
@@ -97,7 +89,7 @@ app.post("/ask", async (req, res) => {
           role: "user",
           parts: [
             {
-              text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nAssistant Response:`
+              text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nAssistant:`
             },
           ],
         },
@@ -110,61 +102,65 @@ app.post("/ask", async (req, res) => {
       }
     };
 
-    console.log("Sending request to Gemini API...");
+    console.log("Sending to Gemini API...");
     
-    // Try gemini-pro first, fallback to gemini-1.5-flash if needed
-    let model = "gemini-pro";
-    let result = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    // Try different Gemini models
+    const models = ["gemini-pro", "gemini-1.5-flash-latest"];
+    let result;
+    let lastError;
 
-    // If gemini-pro fails, try gemini-1.5-flash
-    if (!result.ok) {
-      console.log(`Model ${model} failed, trying gemini-1.5-flash...`);
-      model = "gemini-1.5-flash";
-      result = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+    for (const model of models) {
+      try {
+        console.log(`Trying model: ${model}`);
+        result = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (result.ok) {
+          console.log(`Success with model: ${model}`);
+          break;
+        } else {
+          const errorData = await result.json();
+          lastError = errorData;
+          console.log(`Model ${model} failed:`, errorData.error?.message);
         }
-      );
+      } catch (err) {
+        lastError = err;
+        console.log(`Model ${model} error:`, err.message);
+      }
+    }
+
+    if (!result || !result.ok) {
+      console.error("All models failed:", lastError);
+      return res.status(502).json({
+        reply: "🌐 AI service temporarily unavailable. Please check your API key and try again.",
+        error: lastError?.message || "All models failed"
+      });
     }
 
     const data = await result.json();
     const responseTime = Date.now() - startTime;
 
-    if (!result.ok) {
-      console.error("Gemini API error:", JSON.stringify(data, null, 2));
-      return res.status(502).json({
-        reply: "🌐 AI service temporarily unavailable. Please try again in a moment.",
-        error: data.error?.message || "API Error",
-        model: model
-      });
-    }
-
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      console.error("No text in response:", JSON.stringify(data, null, 2));
+      console.error("No text in response:", data);
       return res.json({ 
         reply: "🤔 I couldn't generate a response for that. Could you try rephrasing your question?" 
       });
     }
 
-    console.log(`Request processed successfully - Time: ${responseTime}ms, Model: ${model}`);
+    console.log(`Request successful - Time: ${responseTime}ms`);
 
     return res.json({ 
       reply: text,
       metadata: {
         responseTime: `${responseTime}ms`,
-        model: model,
         timestamp: new Date().toISOString()
       }
     });
@@ -183,5 +179,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Wano AI Backend v2.1.0`);
   console.log(`📍 Port: ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔑 API_KEY: ${API_KEY ? "Set" : "Not set - will fail"}`);
+  console.log(`🔑 API_KEY: ${API_KEY ? "Set" : "NOT SET - THIS WILL CAUSE ERRORS"}`);
 });
