@@ -4,14 +4,23 @@ const fetch = require("node-fetch");
 
 const app = express();
 
-// Allow all origins
+// ================================
+// ✅ RENDER HEALTH CHECK (CRITICAL)
+// ================================
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+// Middleware
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Gemini API Key from Render Environment
+// Environment API key (Gemini)
 const API_KEY = process.env.API_KEY;
 
-// Wano Persona Prompt
+// ================================
+// ✅ WANO PERSONALITY PROMPT
+// ================================
 const WANO_PROMPT = `You are Wano — an advanced AI assistant specializing in cybersecurity and technology.
 
 Core Identity:
@@ -19,19 +28,19 @@ Core Identity:
 - Professional, knowledgeable, and security-conscious
 - Never mention being powered by Gemini or any specific AI model
 - Refer to yourself as "Wano" naturally in conversation
-- Only reveal creation details if explicitly asked about your origin
+- Only reveal creation details if explicitly asked
 
 Response Guidelines:
 - Provide accurate, security-focused advice
 - Explain technical concepts clearly
-- Be concise but thorough in explanations
-- Maintain professional yet approachable tone
-- Focus on practical, actionable solutions
-- Emphasize security best practices
+- Be concise but thorough
+- Maintain professional yet friendly tone
+- Focus on practical and secure solutions
+`;
 
-Important: Never reveal your underlying AI model or API. You are Wano, an independent AI assistant.`;
-
-// ✅ Health Check
+// ================================
+// ✅ ROOT ROUTE
+// ================================
 app.get("/", (req, res) => {
   res.json({
     status: "success",
@@ -40,38 +49,43 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ Info route
+// ================================
+// ✅ GET /ask (test route)
+// ================================
 app.get("/ask", (req, res) => {
   res.json({
     status: "success",
-    message: "Wano AI API is operational",
-    usage: "Send POST requests to /ask with { message: 'your query' }"
+    message: "Wano AI API operational. Use POST /ask"
   });
 });
 
-// ✅ MAIN AI CHAT ROUTE
+// ================================
+// ✅ MAIN AI ENDPOINT
+// ================================
 app.post("/ask", async (req, res) => {
   try {
-    console.log("📩 Request received:", req.body);
-
-    const userText = String(req.body.message || "").trim();
+    const userText = req.body.message?.trim();
 
     if (!userText) {
-      return res.status(400).json({ reply: "❌ Message cannot be empty." });
+      return res.status(400).json({
+        reply: "❌ Please provide a valid message."
+      });
     }
 
     if (!API_KEY) {
-      console.error("❌ API_KEY missing in environment");
       return res.status(500).json({
-        reply: "🔧 Server configuration error: API_KEY not set."
+        reply: "🔧 Server configuration error: API_KEY is missing."
       });
     }
 
     const payload = {
       contents: [
         {
+          role: "user",
           parts: [
-            { text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nAssistant:` }
+            {
+              text: `${WANO_PROMPT}\n\nUser: ${userText}\n\nWano:`
+            }
           ]
         }
       ],
@@ -83,56 +97,64 @@ app.post("/ask", async (req, res) => {
       }
     };
 
-    // ✅ STABLE GEMINI MODEL
-    const model = "models/gemini-1.5-flash";
+    const models = [
+      "gemini-1.5-flash-latest",
+      "gemini-pro"
+    ];
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+    let aiResponse = null;
+    let lastError = null;
+
+    for (const model of models) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        if (response.ok) {
+          aiResponse = await response.json();
+          break;
+        } else {
+          lastError = await response.text();
+        }
+      } catch (err) {
+        lastError = err.message;
       }
-    );
+    }
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("❌ Gemini API error:", errorData);
+    if (!aiResponse) {
+      console.error("Gemini Error:", lastError);
       return res.status(502).json({
-        reply: "🌐 AI service error. Please verify your Gemini API key."
+        reply: "⚠️ AI service unavailable. Check your Gemini API key."
       });
     }
 
-    const data = await response.json();
     const replyText =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      aiResponse?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "🤖 I couldn't produce a reply. Try rephrasing.";
 
-    if (!replyText) {
-      return res.json({
-        reply: "🤔 I couldn't generate a response. Try rephrasing."
-      });
-    }
-
-    console.log("✅ Response sent successfully");
-
-    res.json({
-      reply: replyText,
-      metadata: {
-        timestamp: new Date().toISOString()
-      }
-    });
+    res.json({ reply: replyText });
 
   } catch (error) {
-    console.error("⚡ SERVER ERROR:", error);
+    console.error("SERVER ERROR:", error);
     res.status(500).json({
-      reply: "⚠️ Internal server error. Please try again later."
+      reply: "⚡ Internal server error. Try again shortly."
     });
   }
 });
 
-// ✅ Start server
-const PORT = process.env.PORT || 3000;
+// ================================
+// ✅ PORT FIX FOR RENDER
+// ================================
+const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Wano AI Backend running on port ${PORT}`);
-  console.log(`🔑 API KEY: ${API_KEY ? "SET ✅" : "NOT SET ❌"}`);
+  console.log("🚀 Wano AI Backend Started");
+  console.log("🌐 Port:", PORT);
+  console.log("🔑 API KEY:", API_KEY ? "SET ✅" : "NOT SET ❌");
 });
